@@ -31,7 +31,6 @@ import org.junit.jupiter.api.AfterEach;
 import java.nio.file.Path;
 
 @ExtendWith(MockitoExtension.class)
-@TestPropertySource("/test.properties")
 @Slf4j
 public class CloudinaryServiceTest {
 

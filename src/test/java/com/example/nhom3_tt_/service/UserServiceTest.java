@@ -34,7 +34,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 
 @ExtendWith(MockitoExtension.class)
-@TestPropertySource("/test.properties")
 public class UserServiceTest {
 
   @Mock private UserRepository userRepository;

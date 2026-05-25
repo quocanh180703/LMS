@@ -15,23 +15,18 @@ import com.example.nhom3_tt_.services.CartService;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@TestPropertySource("/test.properties")
+@ExtendWith(MockitoExtension.class)
 class CartControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
     @Mock
@@ -71,7 +66,7 @@ class CartControllerTest {
         when(cartService.getOrCreateCartByStudentId(studentId))
                 .thenReturn(cartResponse);
 
-        mockMvc.perform(get("/api/v1/carts/student/{studentId}", studentId))
+        mockMvc.perform(post("/api/v1/carts/student/{studentId}", studentId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.studentId").value(studentId));

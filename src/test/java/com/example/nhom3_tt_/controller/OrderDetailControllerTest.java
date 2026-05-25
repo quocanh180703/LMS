@@ -26,7 +26,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestPropertySource("/test.properties")
 public class OrderDetailControllerTest {
 
     @Mock private OrderDetailService orderDetailService;

@@ -31,7 +31,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.multipart.MultipartFile;
 
 @ExtendWith(MockitoExtension.class)
-@TestPropertySource("/test.properties")
 class CourseServiceTest {
   @Mock private CourseRepository courseRepository;
   @Mock private UserRepository userRepository;

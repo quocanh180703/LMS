@@ -32,7 +32,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestPropertySource("/test.properties")
 public class CourseControllerTest {
 
   private MockMvc mockMvc;

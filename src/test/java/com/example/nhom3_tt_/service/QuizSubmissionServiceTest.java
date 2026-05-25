@@ -43,7 +43,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.TestPropertySource;
 
 @ExtendWith(MockitoExtension.class)
-@TestPropertySource("/test.properties")
 public class QuizSubmissionServiceTest {
 
   @Mock private QuizSubmissionRepository quizSubmissionRepository;

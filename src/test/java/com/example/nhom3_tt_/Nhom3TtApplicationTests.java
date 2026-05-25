@@ -5,7 +5,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
-@TestPropertySource("classpath:test.properties")
 class Nhom3TtApplicationTests {
 
   @Test

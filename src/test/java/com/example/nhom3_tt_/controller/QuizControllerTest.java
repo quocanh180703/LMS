@@ -9,17 +9,15 @@ import com.example.nhom3_tt_.exception.ErrorCode;
 import com.example.nhom3_tt_.exception.GlobalException;
 import com.example.nhom3_tt_.services.QuizService;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
@@ -34,15 +32,13 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@TestPropertySource("/test.properties")
+@ExtendWith(MockitoExtension.class)
 public class QuizControllerTest {
   @Mock private QuizService quizService;
 
   @InjectMocks private QuizController quizController;
 
-  @Autowired private MockMvc mockMvc;
+  private MockMvc mockMvc;
 
   @Test
   void getAllQuiz_success() throws Exception {
@@ -80,7 +76,7 @@ public class QuizControllerTest {
             post("/api/v1/quizzes")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
-                    "{\"sectionId\":\"1\",\"title\":\"string\",\"description\":\"string\",\"timeLimit\":30,\"attemptAllowed\":1,\"startDate\":\"2026-01-02T07:23:31.148Z\",\"endDate\":\"2026-01-03T07:23:31.148Z\"}"))
+                            "{\"sectionId\":\"1\",\"title\":\"string\",\"description\":\"string\",\"timeLimit\":30,\"attemptAllowed\":1,\"startDate\":\"2027-01-02T07:23:31.148Z\",\"endDate\":\"2027-01-03T07:23:31.148Z\"}"))
         .andExpect(status().isOk());
   }
 

@@ -30,8 +30,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.mock;
 
+import org.junit.jupiter.api.AfterEach;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 @ExtendWith(MockitoExtension.class)
-@TestPropertySource("/test.properties")
 public class LectureServiceTest {
 
   @Mock private LectureRepository repository;
@@ -40,6 +43,18 @@ public class LectureServiceTest {
   @Mock private SectionService sectionService;
   @Mock private CourseService courseService;
   @Mock private CloudinaryService cloudinaryService;
+
+  @AfterEach
+  void tearDown() {
+    SecurityContextHolder.clearContext();
+  }
+
+  private void setAuthenticatedInstructor(Long instructorId) {
+    User instructor = new User();
+    instructor.setId(instructorId);
+    SecurityContextHolder.getContext()
+        .setAuthentication(new UsernamePasswordAuthenticationToken(instructor, null));
+  }
 
   @Test
   void create_success() {
@@ -73,6 +88,7 @@ public class LectureServiceTest {
     course.setId(1L);
     course.setInstructor(instructor);
     section.setCourse(course);
+    setAuthenticatedInstructor(1L);
 
     when(mapper.toLecture(request)).thenReturn(lecture);
     when(cloudinaryService.uploadVideo(
@@ -138,6 +154,7 @@ public class LectureServiceTest {
     when(cloudinaryService.uploadVideo(
             any(MultipartFile.class), any(LectureVideoFolderStructure.class)))
         .thenThrow(new IOException("Upload failed"));
+    setAuthenticatedInstructor(1L);
 
     RuntimeException exception =
         assertThrows(
@@ -197,6 +214,7 @@ public class LectureServiceTest {
     when(lectureService.update(lecture)).thenReturn(lectureResponse);
     when(sectionService.getEntityById(1L)).thenReturn(section);
     when(courseService.getByIdEntity(1L)).thenReturn(course);
+    setAuthenticatedInstructor(1L);
 
     LectureResponse result = lectureService.updateLecture(id, request, video, thumbnail);
 
@@ -255,6 +273,7 @@ public class LectureServiceTest {
     when(cloudinaryService.uploadVideo(
             any(MultipartFile.class), any(LectureVideoFolderStructure.class)))
         .thenThrow(new IOException("Upload failed"));
+    setAuthenticatedInstructor(1L);
 
     RuntimeException exception =
         assertThrows(

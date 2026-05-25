@@ -31,7 +31,6 @@ import org.springframework.test.context.TestPropertySource;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
-@TestPropertySource("/test.properties")
 class AuthServiceTest {
 
   @Mock private UserService userService;

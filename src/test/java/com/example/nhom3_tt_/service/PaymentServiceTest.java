@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 
 
 @ExtendWith(MockitoExtension.class)
-@TestPropertySource("/test.properties")
 class PaymentServiceTest {
 
     @Mock

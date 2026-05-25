@@ -27,7 +27,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.TestPropertySource;
 
 @ExtendWith(MockitoExtension.class)
-@TestPropertySource("/test.properties")
 class CartServiceTest {
 
   @InjectMocks private CartServiceImpl cartService;

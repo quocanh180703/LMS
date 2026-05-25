@@ -42,7 +42,6 @@ import java.util.List;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestPropertySource("/test.properties")
 public class LectureControllerTest {
 
     @Mock

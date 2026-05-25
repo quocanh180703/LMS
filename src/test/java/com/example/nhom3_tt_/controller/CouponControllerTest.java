@@ -15,28 +15,24 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@TestPropertySource("/test.properties")
+@ExtendWith(MockitoExtension.class)
 public class CouponControllerTest {
 
   @Mock private CouponService couponService;
 
   @InjectMocks private CouponController couponController;
 
-  @Autowired private MockMvc mockMvc;
+    private MockMvc mockMvc;
 
   @BeforeEach
   void setUp() {
@@ -53,9 +49,9 @@ public class CouponControllerTest {
     couponResponse.setId(1L);
     couponResponse.setCode("JAVA1213");
     couponResponse.setBeginDay(
-        LocalDateTime.of(2025, 10, 8, 20, 28, 58, 398000000)); // Tương ứng với mẫu JSON
+        LocalDateTime.now().plusDays(1)); // Tương ứng với mẫu JSON
     couponResponse.setExpireDay(
-        LocalDateTime.of(2025, 10, 10, 9, 21, 58, 398000000)); // Tương ứng với mẫu JSON
+        LocalDateTime.now().plusDays(2)); // Tương ứng với mẫu JSON
     couponResponse.setPercentDiscount(15.0);
 
     when(couponService.create(any(CouponRequest.class))).thenReturn(couponResponse);
@@ -67,8 +63,8 @@ public class CouponControllerTest {
                 .content(
                     "{"
                         + "\"code\":\"JAVA1213\","
-                        + "\"beginDay\":\"2025-10-08T20:28:58.398Z\","
-                        + "\"expireDay\":\"2025-10-10T09:21:58.398Z\","
+                        + "\"beginDay\":\"2027-10-08T20:28:58.398Z\"," 
+                        + "\"expireDay\":\"2027-10-10T09:21:58.398Z\"," 
                         + "\"percentDiscount\":15}"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.code").value("JAVA1213"))
@@ -174,8 +170,8 @@ public class CouponControllerTest {
     CouponResponse updatedCoupon = new CouponResponse();
     updatedCoupon.setId(1L);
     updatedCoupon.setCode("UPDATED123");
-    updatedCoupon.setBeginDay(LocalDateTime.of(2025, 10, 6, 0, 0)); // October 6, 2025
-    updatedCoupon.setExpireDay(LocalDateTime.of(2025, 10, 15, 0, 0)); // October 15, 2025
+    updatedCoupon.setBeginDay(LocalDateTime.now().plusDays(1));
+    updatedCoupon.setExpireDay(LocalDateTime.now().plusDays(10));
     updatedCoupon.setPercentDiscount(15.0);
 
     when(couponService.update(eq(1L), any(CouponRequest.class))).thenReturn(updatedCoupon);
@@ -187,8 +183,8 @@ public class CouponControllerTest {
                 .content(
                     "{"
                         + "\"code\":\"UPDATED123\","
-                        + "\"beginDay\":\"2025-10-06T00:00:00\","
-                        + "\"expireDay\":\"2025-10-15T00:00:00\","
+                        + "\"beginDay\":\"2027-10-06T00:00:00\"," 
+                        + "\"expireDay\":\"2027-10-15T00:00:00\"," 
                         + "\"percentDiscount\":15.0}"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.code").value("UPDATED123"))

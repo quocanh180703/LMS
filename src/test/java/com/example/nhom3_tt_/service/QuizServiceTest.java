@@ -37,7 +37,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@TestPropertySource("/test.properties")
 public class QuizServiceTest {
   @Mock private QuizRepository quizRepository;
   @Mock private QuizMapper quizMapper;

@@ -46,7 +46,6 @@ import java.util.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestPropertySource("/test.properties")
 public class PaymentVnpayControllerTest {
     @Mock
     private HttpServletRequest httpServletRequest;

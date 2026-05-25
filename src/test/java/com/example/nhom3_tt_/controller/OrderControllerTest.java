@@ -24,7 +24,6 @@ import java.util.List;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestPropertySource("/test.properties")
 class OrderControllerTest {
 
     @Autowired

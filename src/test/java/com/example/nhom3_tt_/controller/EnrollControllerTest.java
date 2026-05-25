@@ -32,7 +32,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestPropertySource("/test.properties")
 public class EnrollControllerTest {
 
   private MockMvc mockMvc;

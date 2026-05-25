@@ -44,7 +44,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.TestPropertySource;
 
 @ExtendWith(MockitoExtension.class)
-@TestPropertySource("/test.properties")
 public class CartItemServiceTest {
 
   @Mock

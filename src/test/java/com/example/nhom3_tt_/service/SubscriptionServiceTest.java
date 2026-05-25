@@ -33,7 +33,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@TestPropertySource("/test.properties")
 public class SubscriptionServiceTest {
 
     @Mock

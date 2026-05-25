@@ -28,7 +28,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestPropertySource("/test.properties")
 public class ProfileControllerTest {
 
   @Mock private UserService userService;
