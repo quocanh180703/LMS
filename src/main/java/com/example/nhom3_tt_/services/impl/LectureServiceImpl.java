@@ -22,6 +22,7 @@ import java.util.Objects;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -159,16 +160,33 @@ public class LectureServiceImpl implements LectureService {
 
   @Override
   public void delete(Long id) {
-
-    if (!Objects.equals(
-        repository.findById(id).get().getSection().getCourse().getInstructor().getId(),
-        ((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId())) {
-      throw new AppException("You are not the instructor of this course");
+    Lecture lecture = repository.findById(id).orElse(null);
+    if (lecture == null) {
+      throw new NotFoundException("Lecture not found with id = " + id);
     }
+
+    Authentication auth = SecurityContextHolder.getContext() == null ? null : SecurityContextHolder.getContext().getAuthentication();
+    Object principal = auth == null ? null : auth.getPrincipal();
+    Long principalId = null;
+    if (principal instanceof User) {
+      principalId = ((User) principal).getId();
+    }
+
+    Long instructorId = lecture.getSection() == null || lecture.getSection().getCourse() == null
+        ? null
+        : lecture.getSection().getCourse().getInstructor() == null
+            ? null
+            : lecture.getSection().getCourse().getInstructor().getId();
+
+    if (!Objects.equals(instructorId, principalId)) {
+      throw new AppException(ErrorCode.NOT_INSTRUCTOR);
+    }
+
     boolean isExistedLecture = repository.existsById(id);
     if (!isExistedLecture) {
       throw new NotFoundException("Lecture not found with id = " + id);
     }
+
     repository.deleteById(id);
   }
 

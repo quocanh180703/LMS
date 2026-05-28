@@ -5,7 +5,9 @@ import static org.mockito.Mockito.*;
 
 import com.example.nhom3_tt_.dtos.requests.CourseRequest;
 import com.example.nhom3_tt_.dtos.response.CourseResponse;
+import com.example.nhom3_tt_.exception.AppException;
 import com.example.nhom3_tt_.exception.CustomException;
+import com.example.nhom3_tt_.exception.ErrorCode;
 import com.example.nhom3_tt_.exception.NotFoundException;
 import com.example.nhom3_tt_.mappers.CourseMapper;
 import com.example.nhom3_tt_.models.*;
@@ -19,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -27,6 +30,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,6 +44,22 @@ class CourseServiceTest {
   @Mock private CloudinaryService cloudinaryService;
 
   @InjectMocks private CourseServiceImpl courseService;
+
+  @AfterEach
+  void clearSecurityContext() {
+    SecurityContextHolder.clearContext();
+  }
+
+  private void setAuthenticatedInstructor(Long instructorId) {
+    User instructor = new User();
+    instructor.setId(instructorId);
+
+    org.springframework.security.core.context.SecurityContext securityContext =
+        mock(org.springframework.security.core.context.SecurityContext.class);
+    when(securityContext.getAuthentication())
+        .thenReturn(new UsernamePasswordAuthenticationToken(instructor, null));
+    SecurityContextHolder.setContext(securityContext);
+  }
 
   //  @Test
   //  void uploadThumbnail_success() throws IOException {
@@ -476,6 +497,219 @@ class CourseServiceTest {
         assertThrows(NotFoundException.class, () -> courseService.approveCourse(99L));
     assertEquals("No course ID found: 99", exception.getMessage());
     verify(courseRepository).findById(99L);
+  }
+
+  @Test
+  void update_success() {
+    Long courseId = 1L;
+    Long instructorId = 2L;
+    Long categoryId = 3L;
+
+    CourseRequest request = new CourseRequest();
+    request.setInstructorId(instructorId);
+    request.setCategoryId(categoryId);
+    request.setRegularPrice(100);
+
+    Course course = new Course();
+    course.setId(courseId);
+    User instructor = new User();
+    instructor.setId(instructorId);
+    course.setInstructor(instructor);
+
+    User newInstructor = new User();
+    newInstructor.setId(instructorId);
+    Category category = new Category();
+    CourseResponse response = new CourseResponse();
+
+    setAuthenticatedInstructor(instructorId);
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(userRepository.findById(instructorId)).thenReturn(Optional.of(newInstructor));
+    when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
+    doNothing().when(courseMapper).updateCourseFromRequest(request, course);
+    when(courseRepository.save(course)).thenReturn(course);
+    when(courseMapper.convertToResponse(course)).thenReturn(response);
+
+    CourseResponse result = courseService.update(courseId, request);
+
+    assertNotNull(result);
+    assertEquals(response, result);
+    verify(courseRepository, times(2)).findById(courseId);
+    verify(userRepository).findById(instructorId);
+    verify(categoryRepository).findById(categoryId);
+    verify(courseMapper).updateCourseFromRequest(request, course);
+    verify(courseRepository).save(course);
+  }
+
+  @Test
+  void forceDelete_success() {
+    Long courseId = 1L;
+    Long instructorId = 2L;
+
+    Course course = new Course();
+    course.setId(courseId);
+    User instructor = new User();
+    instructor.setId(instructorId);
+    course.setInstructor(instructor);
+    CourseResponse response = new CourseResponse();
+
+    setAuthenticatedInstructor(instructorId);
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(courseMapper.convertToResponse(course)).thenReturn(response);
+
+    CourseResponse result = courseService.forceDelete(courseId);
+
+    assertNotNull(result);
+    assertEquals(response, result);
+    verify(courseRepository, times(2)).findById(courseId);
+    verify(courseRepository).deleteById(courseId);
+  }
+
+  @Test
+  void update_notInstructor_shouldThrowException() {
+    Long courseId = 1L;
+    Long instructorId = 2L;
+    Long anotherInstructorId = 9L;
+
+    CourseRequest request = new CourseRequest();
+    request.setInstructorId(instructorId);
+    request.setCategoryId(3L);
+
+    Course course = new Course();
+    User instructor = new User();
+    instructor.setId(instructorId);
+    course.setInstructor(instructor);
+
+    setAuthenticatedInstructor(anotherInstructorId);
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    AppException exception = assertThrows(AppException.class, () -> courseService.update(courseId, request));
+
+    assertEquals(ErrorCode.NOT_INSTRUCTOR, exception.getErrorCode());
+    verify(courseRepository).findById(courseId);
+    verifyNoInteractions(userRepository, categoryRepository, courseMapper, cloudinaryService);
+  }
+
+  @Test
+  void forceDelete_notInstructor_shouldThrowException() {
+    Long courseId = 1L;
+    Long instructorId = 2L;
+    Long anotherInstructorId = 9L;
+
+    Course course = new Course();
+    User instructor = new User();
+    instructor.setId(instructorId);
+    course.setInstructor(instructor);
+
+    setAuthenticatedInstructor(anotherInstructorId);
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    AppException exception = assertThrows(AppException.class, () -> courseService.forceDelete(courseId));
+
+    assertEquals(ErrorCode.NOT_INSTRUCTOR, exception.getErrorCode());
+    verify(courseRepository).findById(courseId);
+    verifyNoInteractions(courseMapper, userRepository, categoryRepository, cloudinaryService);
+  }
+
+  @Test
+  void uploadThumbnail_notInstructor_shouldThrowException() {
+    Long courseId = 1L;
+    Long instructorId = 2L;
+    Long anotherInstructorId = 9L;
+    MultipartFile thumbnail = mock(MultipartFile.class);
+
+    Course course = new Course();
+    User instructor = new User();
+    instructor.setId(instructorId);
+    course.setInstructor(instructor);
+
+    setAuthenticatedInstructor(anotherInstructorId);
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    AppException exception =
+        assertThrows(AppException.class, () -> courseService.uploadThumbnail(courseId, thumbnail));
+
+    assertEquals(ErrorCode.NOT_INSTRUCTOR, exception.getErrorCode());
+    verify(courseRepository).findById(courseId);
+    verifyNoInteractions(cloudinaryService, courseMapper, userRepository, categoryRepository);
+  }
+
+  @Test
+  void uploadVideo_notInstructor_shouldThrowException() {
+    Long courseId = 1L;
+    Long instructorId = 2L;
+    Long anotherInstructorId = 9L;
+    MultipartFile video = mock(MultipartFile.class);
+
+    Course course = new Course();
+    User instructor = new User();
+    instructor.setId(instructorId);
+    course.setInstructor(instructor);
+
+    setAuthenticatedInstructor(anotherInstructorId);
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+
+    AppException exception =
+        assertThrows(AppException.class, () -> courseService.uploadVideo(courseId, video));
+
+    assertEquals(ErrorCode.NOT_INSTRUCTOR, exception.getErrorCode());
+    verify(courseRepository).findById(courseId);
+    verifyNoInteractions(cloudinaryService, courseMapper, userRepository, categoryRepository);
+  }
+
+  @Test
+  void uploadThumbnail_success() throws IOException {
+    Long courseId = 1L;
+    Long instructorId = 2L;
+    MultipartFile thumbnail = mock(MultipartFile.class);
+
+    Course course = new Course();
+    course.setId(courseId);
+    User instructor = new User();
+    instructor.setId(instructorId);
+    course.setInstructor(instructor);
+    CourseResponse response = new CourseResponse();
+
+    setAuthenticatedInstructor(instructorId);
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(cloudinaryService.uploadImage(thumbnail)).thenReturn("https://cdn.example/thumb.jpg");
+    when(courseRepository.save(course)).thenReturn(course);
+    when(courseMapper.convertToResponse(course)).thenReturn(response);
+
+    CourseResponse result = courseService.uploadThumbnail(courseId, thumbnail);
+
+    assertNotNull(result);
+    assertEquals(response, result);
+    assertEquals("https://cdn.example/thumb.jpg", course.getThumbnail());
+    verify(cloudinaryService).uploadImage(thumbnail);
+    verify(courseRepository).save(course);
+  }
+
+  @Test
+  void uploadVideo_success() throws IOException {
+    Long courseId = 1L;
+    Long instructorId = 2L;
+    MultipartFile video = mock(MultipartFile.class);
+
+    Course course = new Course();
+    course.setId(courseId);
+    User instructor = new User();
+    instructor.setId(instructorId);
+    course.setInstructor(instructor);
+    CourseResponse response = new CourseResponse();
+
+    setAuthenticatedInstructor(instructorId);
+    when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+    when(cloudinaryService.uploadVideo(video)).thenReturn("https://cdn.example/video.mp4");
+    when(courseRepository.save(course)).thenReturn(course);
+    when(courseMapper.convertToResponse(course)).thenReturn(response);
+
+    CourseResponse result = courseService.uploadVideo(courseId, video);
+
+    assertNotNull(result);
+    assertEquals(response, result);
+    assertEquals("https://cdn.example/video.mp4", course.getIntroVideo());
+    verify(cloudinaryService).uploadVideo(video);
+    verify(courseRepository).save(course);
   }
 
   //  @Test

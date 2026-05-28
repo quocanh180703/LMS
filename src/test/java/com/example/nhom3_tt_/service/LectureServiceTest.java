@@ -33,6 +33,7 @@ import static org.mockito.Mockito.mock;
 import org.junit.jupiter.api.AfterEach;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 public class LectureServiceTest {
@@ -114,6 +115,43 @@ public class LectureServiceTest {
         .uploadImage(any(MultipartFile.class), any(LectureVideoFolderStructure.class));
     verify(repository).save(lecture);
     verify(mapper).toLectureResponse(lecture);
+  }
+
+  @Test
+  void createLecture_withNoVideoOrThumbnail_usesDefaultThumbnail() throws IOException {
+    ReflectionTestUtils.setField(lectureService, "defaultThumbnailUrl", "default-thumb");
+
+    LectureRequest request = new LectureRequest();
+    request.setSectionId(1L);
+    Lecture lecture = new Lecture();
+    LectureResponse lectureResponse = new LectureResponse();
+
+    Section section = new Section();
+    section.setId(1L);
+    Course course = new Course();
+    course.setId(10L);
+    User instructor = new User();
+    instructor.setId(1L);
+    course.setInstructor(instructor);
+    section.setCourse(course);
+    setAuthenticatedInstructor(1L);
+
+    when(mapper.toLecture(request)).thenReturn(lecture);
+    when(repository.save(lecture)).thenReturn(lecture);
+    when(mapper.toLectureResponse(lecture)).thenReturn(lectureResponse);
+    when(sectionService.getEntityById(1L)).thenReturn(section);
+    when(courseService.getByIdEntity(10L)).thenReturn(course);
+
+    LectureResponse result = lectureService.createLecture(request, null, null);
+
+    assertNotNull(result);
+    assertEquals(lectureResponse, result);
+    assertNull(lecture.getLinkVideo());
+    assertEquals("default-thumb", lecture.getThumbnail());
+    verify(cloudinaryService, never())
+        .uploadVideo(any(MultipartFile.class), any(LectureVideoFolderStructure.class));
+    verify(cloudinaryService, never())
+        .uploadImage(any(MultipartFile.class), any(LectureVideoFolderStructure.class));
   }
 
   //  @Test
@@ -228,6 +266,29 @@ public class LectureServiceTest {
     verify(cloudinaryService)
         .uploadImage(any(MultipartFile.class), any(LectureVideoFolderStructure.class));
     //    verify(lectureService).update(lecture);
+  }
+
+  @Test
+  void delete_success() {
+    Long id = 1L;
+    Lecture lecture = new Lecture();
+    Section section = new Section();
+    Course course = new Course();
+    User instructor = new User();
+    instructor.setId(1L);
+    course.setInstructor(instructor);
+    section.setCourse(course);
+    lecture.setSection(section);
+
+    doReturn(Optional.of(lecture)).when(repository).findById(id);
+    when(repository.existsById(id)).thenReturn(true);
+    setAuthenticatedInstructor(1L);
+
+    lectureService.delete(id);
+
+    verify(repository).findById(id);
+    verify(repository).existsById(id);
+    verify(repository).deleteById(id);
   }
 
   //  @Test

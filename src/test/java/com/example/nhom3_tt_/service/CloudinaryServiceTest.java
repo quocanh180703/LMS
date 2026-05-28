@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -82,6 +83,69 @@ public class CloudinaryServiceTest {
     assertTrue(testFile.exists());
     assertEquals(content.length, testFile.length());
     assertArrayEquals(content, Files.readAllBytes(testFile.toPath()));
+  }
+
+  @Test
+  void convert_nullFile_throwsAppException() {
+    AppException exception = assertThrows(AppException.class, () -> cloudinaryService.convert(null));
+
+    assertEquals("File is empty", exception.getMessage());
+  }
+
+  @Test
+  void uploadVideo_withoutFolder_shouldReturnUrl() throws IOException {
+    MockMultipartFile file =
+        new MockMultipartFile("video", "demo-video.mp4", "video/mp4", "demo".getBytes());
+
+    Map<String, String> uploadResult = new HashMap<>();
+    uploadResult.put("url", EXPECTED_VIDEO_URL);
+
+    when(cloudinary.uploader()).thenReturn(uploader);
+    when(uploader.upload(any(File.class), any(Map.class))).thenReturn(uploadResult);
+
+    String result = cloudinaryService.uploadVideo(file);
+
+    assertEquals(EXPECTED_VIDEO_URL, result);
+    verify(cloudinary).uploader();
+    verify(uploader).upload(any(File.class), any(Map.class));
+  }
+
+  @Test
+  void uploadImage_withoutFolder_shouldReturnUrl() throws IOException {
+    MockMultipartFile file =
+        new MockMultipartFile("image", "demo-image.jpg", "image/jpeg", "demo".getBytes());
+
+    Map<String, String> uploadResult = new HashMap<>();
+    uploadResult.put("url", EXPECTED_IMAGE_URL);
+
+    when(cloudinary.uploader()).thenReturn(uploader);
+    when(uploader.upload(any(File.class), any(Map.class))).thenReturn(uploadResult);
+
+    String result = cloudinaryService.uploadImage(file);
+
+    assertEquals(EXPECTED_IMAGE_URL, result);
+    verify(cloudinary).uploader();
+    verify(uploader).upload(any(File.class), any(Map.class));
+  }
+
+  @Test
+  void getFileName_shouldSplitOnDots() {
+    String[] parts = cloudinaryService.getFileName("lesson.final.mp4");
+
+    assertArrayEquals(new String[] {"lesson", "final", "mp4"}, parts);
+  }
+
+  @Test
+  void generatePublicValue_shouldAppendOriginalStem() {
+    String publicValue = cloudinaryService.generatePublicValue("lesson.final.mp4");
+
+    assertTrue(publicValue.endsWith("_lesson"));
+    assertTrue(publicValue.contains("_"));
+  }
+
+  @Test
+  void cleanDisk_shouldSwallowIOExceptionWhenFileDoesNotExist() {
+    cloudinaryService.cleanDisk(new File("non-existent-file-for-clean-disk-test.tmp"));
   }
 
   @Test
